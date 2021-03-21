@@ -1,3 +1,6 @@
-# Flockuarium
-You can guide the boids with a middle mouse click. Click [here](https://flockuarium.netlify.app/) to play.  
+# [Flockuarium](https://flockuarium.netlify.app/)
+``LEFT CLICK: Add walls.``  
+``RIGHT CLICK: Remove walls.``  
+``MIDDLE CLICK: Guide the boids towards the mouse``  
+
 ![showcase](./showcase.gif)
