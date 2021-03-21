@@ -4,3 +4,9 @@
 ``MIDDLE CLICK: Guide the boids towards the mouse``  
 
 ![showcase](./showcase.gif)
+
+### Includes
+* Cave Generation
+* Flocking Behaviour
+* Obstacle Avoidance
+* Ray Casting
