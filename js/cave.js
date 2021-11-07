@@ -1,10 +1,9 @@
 class Cave {
-  constructor(tile_size) {
-    this.tile_size = tile_size;
-    this.w = ceil(width / tile_size);
-    this.h = ceil(height / tile_size);
-    this.width = this.w * tile_size;
-    this.height = this.h * tile_size;
+  constructor() {
+    this.w = ceil(width / TILE_SIZE);
+    this.h = ceil(height / TILE_SIZE);
+    this.width = this.w * TILE_SIZE;
+    this.height = this.h * TILE_SIZE;
     
     this.grid = new Array(this.w);
     for(let i = 0; i < this.w; i++) {
@@ -15,11 +14,11 @@ class Cave {
     }
   }
   
-  get_tile_by_pos(x, y) {
+  get_tile_at(x, y) {
     if(x < 0 || y < 0 || x >= this.width || y >= this.height)
       return -1;
-    const i = floor(x / this.tile_size);
-    const j = floor(y / this.tile_size);
+    const i = floor(x / TILE_SIZE);
+    const j = floor(y / TILE_SIZE);
     return this.grid[i][j];
   }
   
@@ -37,11 +36,13 @@ class Cave {
     }
   }
   
-  render() {
-    fill(71, 43, 40);
+  render(to) {
+    to.background(40);
+    to.fill(0);
+    to.noStroke();
     this.per_tile((i, j) => {
       if(this.grid[i][j] == 1) 
-        square(i * this.tile_size, j * this.tile_size, this.tile_size);
+        to.square(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE);
     });
   }
 }

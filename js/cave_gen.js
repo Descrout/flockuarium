@@ -1,13 +1,3 @@
-function create2DArray(w, h) {
-  const arr = new Array(w);
-  
-  for(let i = 0; i < w; i++) {
-    arr[i] = new Array(h);
-  }
-  
-  return arr;
-}
-
 class Room {
   constructor(tiles, map) {
     this.tiles = tiles;

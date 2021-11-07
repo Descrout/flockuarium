@@ -1,17 +1,21 @@
 class Boid {
 	constructor(x, y) {
-		this.pos = createVector(x, y);
-		this.acc = createVector(0, 0);
-		this.vel = createVector(random(-2,2), random(-2,2));
-		this.r = 4;
-		this.max_speed = 5;
-		this.max_force = 0.1;
-    	this.color = color(random(255),random(255),random(255));
+		this.pos = Vec2.create(x, y);
+        this.vel = Vec2.create(0, 0);
+        this.acc = Vec2.create(random(-2,2), random(-2,2));
+
+		this.r = HALF_TILE * 0.75;
+		this.max_speed = 3;
+		this.max_force = 0.14;
+    	this.color = floor(random(colors.length));
     	this.angle = 0;
+		this.heading = 0;
+
+		this.ray = new Ray(10);
 	}
 
 	apply_force(force) {
-		this.acc.add(force);
+		Vec2.add(this.acc, force, this.acc);
 	}
 
 	flock(locals) {
@@ -19,87 +23,90 @@ class Boid {
 		const ali = this.align(locals);
 		const coh = this.cohesion(locals);
 
-		sep.mult(1.4);
-		ali.mult(1);
-		coh.mult(1);
+		Vec2.mult(sep, 1.2, sep);
+		//Vec2.mult(ali, 1.1, ali);
+		//Vec2.mult(coh, 1.1, coh);
 
 		this.apply_force(sep);
 		this.apply_force(ali);
 		this.apply_force(coh);
+
+		vec_pool.store(sep);
+		vec_pool.store(ali);
+		vec_pool.store(coh);
 	}
 
 	avoid() {
-		const front = p5.Vector.add(this.pos, this.vel);
-	    const result = Ray.cast(this.pos, front);
-		if(!result) return createVector(0, 0);
+		const out = vec_pool.retrieve(0, 0);
+	    const result = this.ray.cast(this.pos[0], this.pos[1], this.heading, out);
+		if(!result) return Vec2.set(out, 0, 0);
 
-		const mid = createVector(result.tile.x * cave.tile_size + cave.tile_size / 2,
-			result.tile.y * cave.tile_size + cave.tile_size / 2);
-		const d = p5.Vector.dist(this.pos, result.pos);
-		const steer = p5.Vector.sub(result.pos, mid);
-		steer.setMag(this.max_speed / d);
-		//steer.limit(this.max_force);
-		return steer;
+		const d = Vec2.dist(this.pos, out);
+		out[0] -= result.i * TILE_SIZE + HALF_TILE;
+		out[1] -= result.j * TILE_SIZE + HALF_TILE;
+		Vec2.setMag(out, this.max_speed / d);
+		//Vec2.limit(out, this.max_force);
+		return out;
 	}
 
 	seperate(locals) {
-		const steer = createVector(0, 0);
+		const steer = vec_pool.retrieve(0, 0);
 		let count = 0;
 
 		for(const other of locals) {
-			if(other == this) continue;
-			const d = p5.Vector.dist(this.pos, other.pos);
-			const diff = p5.Vector.sub(this.pos, other.pos);
-			diff.normalize();
-			diff.div(d);
-			steer.add(diff);
+			const d = Vec2.dist(this.pos, other.pos);
+			const diff = vec_pool.retrieve(0, 0);
+			Vec2.sub(this.pos, other.pos, diff);
+			Vec2.normalize(diff, diff);
+			Vec2.div(diff, d, diff);
+			Vec2.add(steer, diff, steer);
+			vec_pool.store(diff);
 			count += 1;
 		}
 
-		if(count > 0) steer.div(count);
-		if(steer.mag() > 0) {
-			steer.setMag(this.max_speed);
-			steer.sub(this.vel);
-			steer.limit(this.max_force);
+		if(count > 0) Vec2.div(steer, count, steer);
+		if(Vec2.mag(steer) > 0) {
+			Vec2.setMag(steer, this.max_speed);
+			Vec2.sub(steer, this.vel, steer);
+			Vec2.limit(steer, this.max_force);
 		}
 
 		return steer;
 	}
 
 	align(locals) {
-		const sum = createVector(0, 0);
+		const sum = vec_pool.retrieve(0, 0);
 		let count = 0;
 
 		for(const other of locals) {
-			if(other == this) continue;
-			sum.add(other.vel);
+			if(this.color != other.color) continue;
+			Vec2.add(sum, other.vel, sum);
 			count += 1;
 		}
 
 		if(count > 0) {
-			sum.div(count);
-			sum.normalize();
-			sum.mult(this.max_speed);
-			const steer = p5.Vector.sub(sum, this.vel);
-			steer.limit(this.max_force);
-			return steer;
+			Vec2.div(sum, count, sum);
+			Vec2.normalize(sum, sum);
+			Vec2.mult(sum, this.max_speed, sum);
+			Vec2.sub(sum, this.vel, sum);
+			Vec2.limit(sum, this.max_force);
 		}
 
 		return sum;
 	}
 
 	cohesion(locals) {
-		const sum = createVector(0, 0);
+		const sum = vec_pool.retrieve(0, 0);
 		let count = 0;
 
 		for(const other of locals) {
-			if(other == this) continue;
-			sum.add(other.pos);
+			if(this.color != other.color) continue;
+			Vec2.add(sum, other.pos, sum);
 			count += 1;
 		}
 
 		if(count > 0) {
-			sum.div(count);
+			Vec2.div(sum, count, sum);
 			return this.seek(sum);
 		}
 
@@ -107,62 +114,47 @@ class Boid {
 	}
 
 	seek(target) {
-		const desired = p5.Vector.sub(target, this.pos);
+		Vec2.sub(target, this.pos, target);
+		Vec2.setMag(target, this.max_speed);
 
-		desired.setMag(this.max_speed);
+		Vec2.sub(target, this.vel, target);
+		Vec2.limit(target, this.max_force);
 
-		const steer = p5.Vector.sub(desired, this.vel);
-		steer.limit(this.max_force);
-
-		return steer;
-	}
-
-	arrive(target) {
-		const desired = p5.Vector.sub(target, this.pos);
-		const d = desired.mag();
-
-		if(d < 100) {
-			const m = map(d, 0, 100, 0, this.max_speed);
-			desired.setMag(m);
-		}else {
-			desired.setMag(this.max_speed);
-		}
-
-		const steer = p5.Vector.sub(desired, this.vel);
-		steer.limit(this.max_force);
-
-		return steer;
+		return target;
 	}
 
 	borders() {
-		if(this.pos.x < -this.r) this.pos.x = width + this.r;
-		if(this.pos.y < -this.r) this.pos.y = height + this.r;
-		if(this.pos.x > width + this.r) this.pos.x = -this.r;
-		if(this.pos.y > height + this.r) this.pos.y = -this.r;
+		if(this.pos[0] < -this.r) this.pos[0] = width + this.r;
+		if(this.pos[1] < -this.r) this.pos[1] = height + this.r;
+		if(this.pos[0] > width + this.r) this.pos[0] = -this.r;
+		if(this.pos[1] > height + this.r) this.pos[1] = -this.r;
 	}
 
-	update(dt) {
-		this.vel.add(this.acc);
-		this.vel.limit(this.max_speed);
-		this.pos.add(this.vel);
-		this.acc.mult(0);
+	update() {
+		Vec2.add(this.vel, this.acc, this.vel);
+		Vec2.limit(this.vel, this.max_speed);
+		Vec2.add(this.pos, this.vel,this.pos);
+		this.acc[0] = 0;
+		this.acc[1] = 0;
 
-		const target_angle = this.vel.heading() + PI/2;
+		this.heading = Vec2.angle(this.vel);
+		const target_angle = this.heading + PI/2;
 		const da = (target_angle - this.angle) % TWO_PI;
-        const short = 2 * da % TWO_PI - da;
-        this.angle += short * 0.1;
+    const short = 2 * da % TWO_PI - da;
+    this.angle += short * 0.1;
 	}
 
 	render() {
-	    fill(this.color);
-	    push();
-	    translate(this.pos.x, this.pos.y);
-	    rotate(this.angle);
-	    beginShape();
-	    vertex(0, -this.r*2);
-	    vertex(-this.r, this.r*2);
-	    vertex(this.r, this.r*2);
-	    endShape(CLOSE);
-	    pop();
+    push();
+    noStroke();
+    fill(colors[this.color]);
+    translate(this.pos[0], this.pos[1]);
+    rotate(this.angle);
+    beginShape();
+    vertex(0, -this.r*2);
+    vertex(-this.r, this.r*2);
+    vertex(this.r, this.r*2);
+    endShape(CLOSE);
+    pop();
 	}
 }

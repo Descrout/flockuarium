@@ -1,15 +1,14 @@
 class Flock {
-	constructor() {
+	constructor(count) {
 		this.boids = [];
+		for(let i = 0; i < count; i++) {
+			const tile = random(cave_generator.rooms[0].tiles);
+			this.add(tile.x * TILE_SIZE + HALF_TILE, tile.y * TILE_SIZE + HALF_TILE);
+		}
 	}
 
 	add(x, y) {
 		this.boids.push(new Boid(x, y));
-	}
-
-	add_to_tiles(tiles) {
-		const tile = random(tiles);
-		this.add(tile.x * cave.tile_size + cave.tile_size / 2, tile.y * cave.tile_size + cave.tile_size / 2);
 	}
 
 	behave() {
@@ -17,21 +16,23 @@ class Flock {
 			const locals = bin_lattice.retrieve(boid);
 			boid.flock(locals);
 
-			if(mouseIsPressed && mouseButton == CENTER) {
-				const seek = boid.seek(createVector(mouseX, mouseY));
-				seek.mult(0.5);
+			if(mouseIsPressed && mouseButton == LEFT) {
+				const seek = boid.seek(vec_pool.retrieve(mouseX, mouseY));
+				Vec2.mult(seek, 1, seek);
 				boid.apply_force(seek);
+				vec_pool.store(seek);
 			}
 
 			const avo = boid.avoid();
-			avo.mult(3);
+			Vec2.mult(avo, 3, avo);
 			boid.apply_force(avo);
+			vec_pool.store(avo);
 		}
 	}
 
 	update(dt) {
 		for(const boid of this.boids) {
-			boid.update(dt);
+			boid.update();
 			boid.borders();
 		}
 	}
