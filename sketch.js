@@ -1,9 +1,10 @@
 function setup() {
-	createCanvas(windowWidth, windowHeight);
+	canvas = createCanvas(WIDTH, HEIGHT);
+  scaleMultiplier = scaleToWindow(canvas.elt);
 	document.addEventListener('contextmenu', event => event.preventDefault());
 	noStroke();
 
-	caveImg = createGraphics(width, height);
+	caveImg = createGraphics(WIDTH, HEIGHT);
 
 	bin_lattice = new BinLattice(64);
 	cave = new Cave();
@@ -32,4 +33,8 @@ function draw() {
 	if(dt >= 0.033) dt = 0.033;
 	update(dt);
 	render();
+}
+
+function windowResized() {
+  scaleMultiplier = scaleToWindow(canvas.elt);
 }

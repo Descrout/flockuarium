@@ -1,5 +1,5 @@
 # [Flockuarium](https://flockuarium.netlify.app/)
-``LEFT CLICK: Seek the boids towards the mouse.``  
+``MOUSE CLICK: Seek the boids towards the mouse.``  
 
 ![showcase](./showcase.gif)
 

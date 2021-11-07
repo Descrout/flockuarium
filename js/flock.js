@@ -16,8 +16,8 @@ class Flock {
 			const locals = bin_lattice.retrieve(boid);
 			boid.flock(locals);
 
-			if(mouseIsPressed && mouseButton == LEFT) {
-				const seek = boid.seek(vec_pool.retrieve(mouseX, mouseY));
+			if(mouseIsPressed) {
+				const seek = boid.seek(vec_pool.retrieve(mouseX / scaleMultiplier, mouseY / scaleMultiplier));
 				Vec2.mult(seek, 1, seek);
 				boid.apply_force(seek);
 				vec_pool.store(seek);

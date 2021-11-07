@@ -1,7 +1,7 @@
 class BinLattice {
   constructor(tile_size) {
     this.tile_size = tile_size;
-    this.w = ceil(width / tile_size);
+    this.w = ceil(WIDTH / tile_size);
     this.h = ceil(height / tile_size);
     this.width = this.w * tile_size;
     this.height = this.h * tile_size;

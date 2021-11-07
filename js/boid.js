@@ -124,9 +124,9 @@ class Boid {
 	}
 
 	borders() {
-		if(this.pos[0] < -this.r) this.pos[0] = width + this.r;
+		if(this.pos[0] < -this.r) this.pos[0] = WIDTH + this.r;
 		if(this.pos[1] < -this.r) this.pos[1] = height + this.r;
-		if(this.pos[0] > width + this.r) this.pos[0] = -this.r;
+		if(this.pos[0] > WIDTH + this.r) this.pos[0] = -this.r;
 		if(this.pos[1] > height + this.r) this.pos[1] = -this.r;
 	}
 

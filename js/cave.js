@@ -1,6 +1,6 @@
 class Cave {
   constructor() {
-    this.w = ceil(width / TILE_SIZE);
+    this.w = ceil(WIDTH / TILE_SIZE);
     this.h = ceil(height / TILE_SIZE);
     this.width = this.w * TILE_SIZE;
     this.height = this.h * TILE_SIZE;
